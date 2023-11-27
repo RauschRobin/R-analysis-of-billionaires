@@ -51,3 +51,5 @@ rsconnect/
 .Rhistory
 .RData
 .Ruserdata
+
+*.DS_Store
