@@ -64,19 +64,17 @@ df_billionaires
 # Create a data frame with the top 10 billionaires
 top_10_billionaires <- df_billionaires[1:10, ]
 
-# Convert the 'finalWorth' column to numeric values
-top_10_billionaires$finalWorth <- as.numeric(gsub(",", "", top_10_billionaires$finalWorth))
-
-# Create a bar plot
+# Create a bar plot with text labels
 plot <- ggplot(top_10_billionaires, aes(x = reorder(personName, -finalWorth), y = finalWorth, fill = personName)) +
   geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0("$", finalWorth, "B")), vjust = -0.5, color = "black", size = 3) +  # Add text labels
   labs(title = "Top 10 Billionaires and their Net Worth",
        x = "Billionaires",
        y = "Net Worth (in billions USD)",
        fill = "Billionaire") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Display the plot
+# Print the plot
 print(plot)
 
 # The plot displays ten bars in a barchart. Each bar represents the wealth of 
@@ -97,10 +95,6 @@ print(plot)
 
 
 # ------------------------------------------------------------------------------
-
-# INFO AN DICH FABIAN:
-# SAG MAL WAS DU VON DEM OBEREN ALLES HÄLTST. DIE THESE DA IS ERSTMAL IRGENDWAS. KÖNNEN 
-# WIR GERN ÄNDERN ;)
 
 # ICH HÄTTE ULTRA BOCK EIN PLOT ZU ERSTELLEN; INDEM ICH DEN WOHNORT AUF EINER WELTKARTE ALS 
 # PLOT DARSTELLE. ALSO IRGENDWAS MIT MAP. (falls es dir nichts ausmacht.)
