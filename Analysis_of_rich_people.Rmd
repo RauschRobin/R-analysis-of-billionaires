@@ -108,7 +108,7 @@ top_10_billionaires <- df_billionaires[1:10, ]
 ## Plot the top 10 richest billionaires
 ```{r}
 # Create a bar plot with text labels
-plot <- ggplot(top_10_billionaires, aes(x = reorder(personName, -finalWorth), y = finalWorth, fill = personName)) +
+top_10_billionaires_plot <- ggplot(top_10_billionaires, aes(x = reorder(personName, -finalWorth), y = finalWorth, fill = personName)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = paste0("$", finalWorth, "B")), vjust = -0.5, color = "black", size = 3) + # Add text labels
   labs(
@@ -120,7 +120,7 @@ plot <- ggplot(top_10_billionaires, aes(x = reorder(personName, -finalWorth), y 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Print the plot
-print(plot)
+plot(top_10_billionaires_plot)
 ```
   
 The plot displays ten bars in a barchart. Each bar represents the wealth of
@@ -140,4 +140,5 @@ focus on the difference between their wealth. Being part of this dataset is rich
 
 # Ideas
 ICH HÄTTE ULTRA BOCK EIN PLOT ZU ERSTELLEN; INDEM ICH DEN WOHNORT AUF EINER WELTKARTE ALS
-PLOT DARSTELLE. ALSO IRGENDWAS MIT MAP. (falls es dir nichts ausmacht.)
+PLOT DARSTELLE.  
+ALSO IRGENDWAS MIT MAP. (falls es dir nichts ausmacht.)
