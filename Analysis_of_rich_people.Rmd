@@ -150,12 +150,18 @@ df$birthDate <- as.Date(df$birthDate, format="%m/%d/%Y")
 numeric_cols <- sapply(df, is.numeric)
 df_numeric <- df[, numeric_cols]
 
+# Remove column rank
+df_numeric <- df_numeric[, !colnames(df_numeric) %in% c('rank')]
+
+# Remove NA and NaN values
+df_numeric <- na.omit(df_numeric)
+
 # Plot correlation matrix
 cor_matrix <- cor(df_numeric)
 ggcorrplot(cor_matrix, type = "lower", lab = TRUE)
 ```
-
-This plot makes no sense and will therefore not be interpreted by its context. TODO: PLEASE REMOVE RANK, THE CORRELATION BETWEEN FINALWORTH AND RANK IS OBVIOUS AND SHOULD NOT BE HIGHLIGHTED!
+As you can see... 
+TODO: CHANGE SIZE OF PLOT TO MAKE IT READABLE
 
 # Scatter plot between age and wealth
 
@@ -232,8 +238,7 @@ ggplot(df, aes(x = gender, y = finalWorth, fill = gender)) +
        y = "Final Net Worth",
        fill = "Gender")
 ```
-
-Generally men are richer than women. TODO: PLEASE ZOOM ON BOXPLOT AND FOCUS ON THESE STATS INSTEAD OF RICHEST 25%!
+Generally men are richer than women. TODO: ZOOM ON BOXPLOT AND FOCUS ON MAIN STATS INSTEAD OF RICHEST 25%! --> BOXPLOT LOOKS WEIRD
 
 # Billionaires wealth distribution by countries
 
@@ -248,7 +253,7 @@ ggplot(df_country, aes(x = country, y = totalWorth, fill = selfMade)) +
        x = "Country",
        y = "Total Net Worth",
        fill = "Self-Made") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
-The most wealth lies in usa and china (glaube ich). Chinese billionaires are mostly self-made. In the U.S. roughly 1/3 inherited their wealth. TODO: WIE KANN ICH DAS BESSER DARSTELLEN? HAST DU EINE IDEE?
+The most wealth lies in usa and china (glaube ich). Chinese billionaires are mostly self-made. In the U.S. roughly 1/3 inherited their wealth. TODO: IST DAS BESSER DARSTELLBAR?
