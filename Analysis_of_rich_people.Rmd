@@ -13,7 +13,6 @@ This dataset contains data from the 4th of april 2023 and is used for 'exploring
 # We used these libraries:
 library(ggplot2) # to plot graphs and images
 library(dplyr)
-library(ggmap)
 library(ggcorrplot)
 library(ggthemes)
 ```
@@ -211,18 +210,8 @@ This does not work because we need a google api key... TODO: F\*ck Google die eh
 
 ```{r}
 # Map: Geographical distribution of billionaires
-world_map <- get_map(location = "world", zoom = 2)
-ggmap(world_map) +
-  geom_point(data = df, aes(x = longitude_country, y = latitude_country, color = finalWorth, size = finalWorth), alpha = 0.7) +
-  scale_color_viridis_c() +
-  labs(title = "Geographical Distribution of Billionaires",
-       x = "Longitude",
-       y = "Latitude",
-       color = "Final Net Worth",
-       size = "Final Net Worth") +
-  theme_void()
-```
 
+```
 TODO: Here we need to describe the plot that is to generate!
 
 # Wealth distribution by gender
