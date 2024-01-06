@@ -161,7 +161,7 @@ cor_matrix <- cor(df_numeric)
 ggcorrplot(cor_matrix, type = "lower", lab = TRUE)
 ```
 As you can see... 
-TODO: CHANGE SIZE OF PLOT TO MAKE IT READABLE
+TODO: CHANGE SIZE OF PLOT TO MAKE IT READABLE?
 
 # Scatter plot between age and wealth
 
@@ -256,4 +256,4 @@ ggplot(df_country, aes(x = country, y = totalWorth, fill = selfMade)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
-The most wealth lies in usa and china (glaube ich). Chinese billionaires are mostly self-made. In the U.S. roughly 1/3 inherited their wealth. TODO: IST DAS BESSER DARSTELLBAR?
+The most wealth lies in usa and china. Chinese billionaires are mostly self-made. This may be, because China's economy just recently transformed from a largely agrarian and impoverished nation to the world's second-largest economy, driven by their market reforms and globalization. In the U.S. roughly 1/3 of the billionaires inherited their wealth.
