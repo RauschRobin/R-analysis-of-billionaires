@@ -215,6 +215,20 @@ Get an overview of the transformed data. You can use tools such as
   
 Is the resulting data what you expected? Why or why not?
 
+## The distribution of billionaire wealth is highly concentrated among a small number of individuals.
+
+## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
+
+## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
+
+## The relationship between age and becoming a billionaire.
+
+## Countries with lower tax rates have more billionaires.
+
+## Countries with better educational attainment have more billionaires.
+
+## Remaining questions
+
 # 4. Appropriate visualization and aggregation of the data
 
 Summarize the data in a suitable form to answer your formulated question.
@@ -222,6 +236,37 @@ summarized. You should also use suitable visualizations of the transformed and/o
 to support or illustrate your statements accordingly.  
 
 You can also use suitable statistical methods or modeling here if they help you with your research question.
+
+## The distribution of billionaire wealth is highly concentrated among a small number of individuals.
+### How many billionaires own more than 80% of the total wealth?
+
+Robin
+
+## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
+### Which industry is the most profitable?
+Robin
+
+### What is the relationship between the distribution of billionaire wealth and the economic strength of a country, measured by GDP, tax revenue and population?
+Robin
+
+## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
+### Is there a geographical pattern to the distribution of billionaires across countries? If so, what factors contribute to this distribution?
+Fabian
+
+### In which countries do most billionaires inherit their wealth and why?
+Fabian
+
+## The relationship between age and becoming a billionaire.
+### How many billionaires are self-made, and are younger billionaires more likely to be self-made?
+Robin
+
+## Countries with lower tax rates have more billionaires.
+### Which countries have the lowest tax rates and how many billionaires do they have?
+Fabian
+
+## Countries with better educational attainment have more billionaires.
+### Is there a correlation between educational attainment and the number of billionaires in a country?
+Fabian
 
 ## Scatter plot between age and wealth
 
