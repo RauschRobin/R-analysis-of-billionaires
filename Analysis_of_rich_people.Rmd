@@ -61,6 +61,7 @@ library(ggplot2) # to plot graphs and images
 library(dplyr)
 library(ggcorrplot)
 library(ggthemes)
+library(tidyverse)
 ```
 
 ## Read the CSV file into a dataframe called df_billionaires
@@ -238,9 +239,52 @@ to support or illustrate your statements accordingly.
 You can also use suitable statistical methods or modeling here if they help you with your research question.
 
 ## The distribution of billionaire wealth is highly concentrated among a small number of individuals.
-### How many billionaires own more than 80% of the total wealth?
+We think that only a small amount of individuals own a huge part of the entire wealth of all billionaires. The same is already proven for the entire world population: "half of the world's net wealth belongs to the top 1%, top 10% of adults hold 85%, while the bottom 90% hold the remaining 15% of the world's total wealth, top 30% of adults hold 97% of the total wealth". 
 
-Robin
+For that, we'll look at the wealth distribution between the billionaires in this dataset:
+```{r}
+ggplot(df_billionaires, aes(x = finalWorth)) +
+  geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
+  labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Frequency") +
+  theme_minimal()
+```
+The plot shows, that the lower the finalWorth is, the higher the frequency gets. This means that most billionaires are barely above the threshold of 1 billion usd. Only a few billionaires have a higher finalWorth than 25000 million usd.
+
+### How many billionaires own more than 80% of the total wealth?
+Due to the global wealth being around $454.4 trillion in 2022. We cannot really calculate the amount of people that own 80% of the global wealth. But we can calculate the amount of billionaires that own more than 80% of the totalWealth of all billionaires:
+```{r}
+# Calculate the total wealth
+total_wealth <- sum(df_billionaires$finalWorth)
+
+cat("All billionaires wealth combined sums up to", total_wealth, " million usd.\n")
+
+# Calculate percentage of billionaires wealth compared to global wealth:
+result <- (total_wealth * 1e6) / (454.4 * 1e12)
+cat("The entire wealth of all billionaires is just", result * 100, "% of the global wealth.\n")
+
+# Sort billionaires by wealth in descending order
+sorted_billionaires <- df_billionaires[order(df_billionaires$finalWorth, decreasing = TRUE), ]
+
+# Calculate the cumulative sum of wealth
+sorted_billionaires$cumulative_wealth <- cumsum(sorted_billionaires$finalWorth)
+
+# Find the number of billionaires required to own more than 80% of total wealth
+num_billionaires_80_percent <- sum(sorted_billionaires$cumulative_wealth <= 0.8 * total_wealth)
+
+# Print the result
+cat("Number of billionaires owning more than 80% of total wealth of billionaires:", num_billionaires_80_percent, "\n")
+```
+The richest 1157 billionaires own 80% of the combined wealth of all billionaires. Assuming this dataset is complete, there are 2640 billionaires.
+
+Let's look at how many billionaires own half the entire wealth of all billionaires:
+```{r}
+# Find the number of billionaires required to own more than 80% of total wealth
+num_billionaires_80_percent <- sum(sorted_billionaires$cumulative_wealth <= 0.5 * total_wealth)
+
+# Print the result
+cat("Number of billionaires owning more than 50% of total wealth of billionaires:", num_billionaires_80_percent, "\n")
+```
+Only 302 of all 2640 billionaires own more than 50% of the total wealth. This proves that the tendency stays the same for the richest interval of wealth (billionaires) compared to the entire scope. 
 
 ## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
 ### Which industry is the most profitable?
