@@ -301,13 +301,31 @@ Only 302 of all 2640 billionaires own more than 50% of the total wealth. This pr
 
 ## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
 
-SAMPLE
+To check if there is a correlation, lets compare the industries with the gdp:
 
 ```{r}
-
+ggplot(df_billionaires, aes(x = finalWorth, y = industries)) +
+  geom_point() +
+  labs(title = "Correlation Between GDP (finalWorth) and Industry",
+       x = "GDP (finalWorth)",
+       y = "Industry")
 ```
 
-SAMPLE
+On this plot you cannot really see a pattern. Lets zoom in on billionaires below $25 billion:
+
+```{r}
+# Filter the dataset for billionaires with wealth below $25,000
+filtered_data <- subset(df_billionaires, finalWorth < 25000)
+
+# Create a scatter plot
+ggplot(filtered_data, aes(x = finalWorth, y = industries)) +
+  geom_point() +
+  labs(title = "Correlation Between GDP (finalWorth) and Industry for Billionaires Below $25,000",
+       x = "GDP (finalWorth)",
+       y = "Industry")
+```
+
+There is no obvious pattern or correlation.
 
 ### Which industry is the most profitable?
 
@@ -391,7 +409,7 @@ ggplot(df, aes(x = age, y = finalWorth, color = selfMade)) +
     )
 ```
 
-SAMPLE
+Let's also look at the youngest self-made billionaire:
 
 ```{r}
 # Remove NA values
@@ -402,17 +420,60 @@ youngest_age <- min(df[df$selfMade == TRUE, ]$age)
 cat("The age of the youngest self-made billionaire is", youngest_age, "years.")
 ```
 
-The plot indicates that young billionaires before the age of 28 most definitely inherited their wealth. The youngest self-made billionaire is 28 years old. As the age increases, there is no more pattern. The only thing worth mentioning is that the richest billionaires are mostly self-made. This probably results out of the fact of inflation and the growing gap between rich and poor.
+This indicates that young billionaires below the age of 28 most definitely inherited their wealth. The youngest self-made billionaire is 28 years old. As the age increases, there is no obvious pattern. The only thing worth mentioning is that the richest billionaires are mostly self-made. This probably results out of the fact of inflation and the growing gap between rich and poor.
+Let's zoom in on billionaires with a wealth below $25 billion:
+
+```{r}
+filtered_data <- subset(df_billionaires, finalWorth < 25000)
+
+# Scatter plot: Wealth vs. Age
+ggplot(filtered_data, aes(x = age, y = finalWorth, color = selfMade)) +
+    geom_point() +
+    labs(
+        title = "Wealth vs. Age",
+        x = "Age",
+        y = "Final Net Worth",
+        color = "Self-Made"
+    )
+```
+
+This also shows no obvious pattern.
 
 ### How many billionaires are self-made, and are younger billionaires more likely to be self-made?
 
-SAMPLE
+First let's look at how many billionaires are self-made:
 
 ```{r}
+# Count the number of self-made billionaires
+self_made_count <- sum(df_billionaires$selfMade == TRUE)
 
+# Print the count
+cat("Number of self-made billionaires: ", self_made_count, "/2640\n")
 ```
 
-SAMPLE
+Out of the 2,640 billionaires worldwide, 1,812 are considered self-made, meaning they accumulated their wealth through entrepreneurship and business endeavors rather than inheriting it. This trend can be attributed to the increasing opportunities for innovation and entrepreneurship in the global economy, fostering a conducive environment for individuals to create and grow their own businesses. Factors such as technological advancements, globalization, and access to capital have empowered individuals to pursue entrepreneurial ventures, leading to a significant number of self-made billionaires. Additionally, the rise of industries like technology has provided platforms for innovative minds to disrupt traditional business models and amass substantial fortunes.
+Are younger billionaires more likely to be self-made?
+
+```{r}
+# Create age groups (you can adjust the breaks and labels accordingly)
+age_breaks <- c(0, 20, 30, 40, 50, 60, 70, 80, 90, Inf)
+age_labels <- c("<20", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", "90+")
+df_billionaires$age_group <- cut(df_billionaires$age, breaks = age_breaks, labels = age_labels, right = FALSE)
+
+# Create a summary table of the proportion of self-made billionaires in each age group
+summary_table <- table(df_billionaires$age_group, df_billionaires$selfMade)
+prop_table <- prop.table(summary_table, margin = 1)
+
+# Create a bar plot
+ggplot(df_billionaires, aes(x = age_group, fill = factor(selfMade))) +
+  geom_bar(position = "fill") +
+  labs(title = "Proportion of Self-Made Billionaires in Different Age Groups",
+       x = "Age Group",
+       y = "Proportion") +
+  scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "green"), name = "Self-Made")
+```
+
+No, young billionaires are not more likely to be self-made. Between the age of 30 and 90, most billionaires are self-made.
 
 ## Countries with lower tax rates have more billionaires.
 ### Which countries have the lowest tax rates and how many billionaires do they have?
