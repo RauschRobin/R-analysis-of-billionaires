@@ -252,7 +252,7 @@ For that, we'll look at the wealth distribution between the billionaires in this
 ```{r}
 ggplot(df_billionaires, aes(x = finalWorth)) +
   geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
-  labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Frequency") +
+  labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Amount of billionaires") +
   theme_minimal()
 ```
 
@@ -266,7 +266,7 @@ Due to the global wealth being around $454.4 trillion in 2022. We cannot really 
 # Calculate the total wealth
 total_wealth <- sum(df_billionaires$finalWorth)
 
-cat("All billionaires wealth combined sums up to", total_wealth, " million usd.\n")
+cat("All billionaires wealth combined sums up to", total_wealth, "million usd.\n")
 
 # Calculate percentage of billionaires wealth compared to global wealth:
 result <- (total_wealth * 1e6) / (454.4 * 1e12)
@@ -359,11 +359,11 @@ barplot(plot_data$average_wealth, names.arg = plot_data$industry,
 
 This bar chart shows that the industries don't really differ in being the most profitable. Also the results are inaccurate, due to vague classifications of their industries.
 
-The following bar chart shows the wealth distribution over all industries given in the data set. It also differentiates between self-made wealth and inherited wealth.
+The following bar chart shows the wealth distribution over all industries given in the data set. It also differentiates between self-made wealth and inherited wealth. I also removed the top billionaires above $25 billion.
 
 ```{r}
 # Bar chart: Wealth by Industry
-ggplot(df, aes(x = reorder(category, -finalWorth), y = finalWorth, fill = selfMade)) +
+ggplot(filtered_data, aes(x = reorder(category, -finalWorth), y = finalWorth, fill = selfMade)) +
     geom_bar(stat = "identity", position = "dodge") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(
@@ -374,7 +374,7 @@ ggplot(df, aes(x = reorder(category, -finalWorth), y = finalWorth, fill = selfMa
     )
 ```
 
-The billionaires working in Automotive are mainly self-made billionaires while the Fashion & Retail industry is dominated by billionaires that inherited their wealth. Modern industries like Telecom, Automotive, Technology and Media & Entertainment are domiated by self-made billionaires. Most of the wealth by these billionaires comes from the industries Automotive, Telecom, Fashion & Retail, Technology, Diversified, Media & Entertainment, Food & Beverages and Finance & Investments. We should also mention that this data is probably not 100% accurate due to the rough classification of the industry of each billionaire.
+Billionaires working in Energy, Telecom, Gambling & Casinos, Sports, Service and Construction & Engineering are mostly self-made. Industries like Finance & Investment and Media & Entertainment are dominated by billionaires that inherited their wealth. Overall the Technology and Manufacturing industry has a lot of billionaires below $25 billion. We should also mention that this data is probably not 100% accurate due to the rough classification of the industry of each billionaire.
 
 ### What is the relationship between the distribution of billionaire wealth and the economic strength of a country, measured by GDP, tax revenue and population?
 
@@ -424,7 +424,8 @@ This indicates that young billionaires below the age of 28 most definitely inher
 Let's zoom in on billionaires with a wealth below $25 billion:
 
 ```{r}
-filtered_data <- subset(df_billionaires, finalWorth < 25000)
+# Filter out rows with missing values in finalWorth or age
+filtered_data <- subset(df_billionaires, !is.na(finalWorth) & !is.na(age) & finalWorth < 25000)
 
 # Scatter plot: Wealth vs. Age
 ggplot(filtered_data, aes(x = age, y = finalWorth, color = selfMade)) +
@@ -437,7 +438,24 @@ ggplot(filtered_data, aes(x = age, y = finalWorth, color = selfMade)) +
     )
 ```
 
-This also shows no obvious pattern.
+This also shows no obvious pattern. 
+
+Let's also look at a bar chart showing the amount of billionaires for each age:
+
+```{r}
+# Create a bar plot: Count of billionaires by age, differentiated by selfMade
+ggplot(filtered_data, aes(x = age, fill = factor(selfMade))) +
+  geom_bar(position = "dodge", color = "black") +
+  labs(
+    title = "Number of Billionaires by Age",
+    x = "Age",
+    y = "Number of Billionaires",
+    fill = "Self-Made"
+  ) +
+  theme_minimal()
+```
+
+Here you can see that self-made billionaires are generally younger than billionaires who inherited their wealth. You can also see a lot of self-made billionaires who are about 58 years old. This may indicate that being born about 60 years ago is a good time to get rich.
 
 ### How many billionaires are self-made, and are younger billionaires more likely to be self-made?
 
