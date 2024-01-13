@@ -4,6 +4,13 @@ author: "Fabian & Robin"
 date: "15.01.2024"
 output: html_document
 ---
+```{r setup, echo=FALSE, include=FALSE}
+# Disable linting for file
+# nolint start
+
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(out.width = "100%")
+```
 
 This is the R project of Fabian and Robin. We decided to analyse data from billionaires.  
 For that, we found a dataset on kaggle.com: <https://www.kaggle.com/datasets/nelgiriyewithana/billionaires-statistics-dataset>  
@@ -62,6 +69,8 @@ library(dplyr)
 library(ggcorrplot)
 library(ggthemes)
 library(tidyverse)
+library(gridExtra)
+library(plotly)
 ```
 
 ## Read the CSV file into a dataframe called df_billionaires
@@ -149,19 +158,14 @@ details about each person:
     -   Longitude coordinate of the billionaire's country.
 
 ## We first started by creating a list of the top 10 richest billionaires:
-
 ```{r}
 # Create a data frame with the top 10 billionaires
-top_10_billionaires <- df_billionaires[1:10, ]
-```
+df_temp <- df_billionaires[1:10, ]
 
-### Plot the top 10 richest billionaires
-
-```{r}
 # Create a bar plot with text labels
-top_10_billionaires_plot <- ggplot(top_10_billionaires, aes(x = reorder(personName, -finalWorth), y = finalWorth, fill = personName)) +
+ggplot(df_temp, aes(x = reorder(personName, -finalWorth), y = finalWorth, fill = personName)) + # nolint: line_length_linter, line_length_linter.
     geom_bar(stat = "identity") +
-    geom_text(aes(label = paste0("$", finalWorth, "B")), vjust = -0.5, color = "black", size = 3) + # Add text labels
+    geom_text(aes(label = paste0("$", finalWorth, "B")), vjust = -0.5, color = "black", size = 3) + # Add text labels # nolint: line_length_linter.
     labs(
         title = "Top 10 Billionaires and their Net Worth",
         x = "Billionaires",
@@ -169,35 +173,31 @@ top_10_billionaires_plot <- ggplot(top_10_billionaires, aes(x = reorder(personNa
         fill = "Billionaire"
     ) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Print the plot
-plot(top_10_billionaires_plot)
 ```
 
 The plot displays ten bars in a barchart. Each bar represents the wealth of one billionaire. The plot only displays the top 10 richest billionaires. The height of the bar represents the wealth of the billionaire in US-dollars.
 
-## Correlation matrix between numeric values
+## correlation matrix between numeric values
 
 The code calculates and visualizes the correlation matrix of numeric variables in the dataset, indicating the strength and direction of linear relationships between measures such as wealth, age, Consumer Price Index, Gross Domestic Product, life expectancy, and other relevant numeric columns.
 
 ```{r}
-df <- df_billionaires
+df_temp <- df_billionaires
 # Convert 'birthDate' to Date type
-df$birthDate <- as.Date(df$birthDate, format = "%m/%d/%Y")
+df_temp$birthDate <- as.Date(df_temp$birthDate, format = "%m/%d/%Y")
 
 # Filter only numeric columns for correlation analysis
-numeric_cols <- sapply(df, is.numeric)
-df_numeric <- df[, numeric_cols]
+numeric_cols <- sapply(df_temp, is.numeric)
+df_temp_numeric <- df_temp[, numeric_cols]
 
 # Remove column rank
-df_numeric <- df_numeric[, !colnames(df_numeric) %in% c("rank")]
+df_temp_numeric <- df_temp_numeric[, !colnames(df_temp_numeric) %in% c("rank")]
 
 # Remove NA and NaN values
-df_numeric <- na.omit(df_numeric)
+df_temp_numeric <- na.omit(df_temp_numeric)
 
 # Plot correlation matrix
-cor_matrix <- cor(df_numeric)
-ggcorrplot(cor_matrix, type = "lower", lab = TRUE)
+ggcorrplot(cor(df_temp_numeric), type = "lower", lab = TRUE)
 ```
 As you can see... 
 TODO: CHANGE SIZE OF PLOT TO MAKE IT READABLE?
@@ -251,9 +251,9 @@ For that, we'll look at the wealth distribution between the billionaires in this
 
 ```{r}
 ggplot(df_billionaires, aes(x = finalWorth)) +
-  geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
-  labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Amount of billionaires") +
-  theme_minimal()
+    geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
+    labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Amount of billionaires") +
+    theme_minimal()
 ```
 
 The plot shows, that the lower the finalWorth is, the higher the frequency gets. This means that most billionaires are barely above the threshold of 1 billion usd. Only a few billionaires have a higher finalWorth than 25000 million usd.
@@ -305,10 +305,12 @@ To check if there is a correlation, lets compare the industries with the gdp:
 
 ```{r}
 ggplot(df_billionaires, aes(x = finalWorth, y = industries)) +
-  geom_point() +
-  labs(title = "Correlation Between GDP (finalWorth) and Industry",
-       x = "GDP (finalWorth)",
-       y = "Industry")
+    geom_point() +
+    labs(
+        title = "Correlation Between GDP (finalWorth) and Industry",
+        x = "GDP (finalWorth)",
+        y = "Industry"
+    )
 ```
 
 On this plot you cannot really see a pattern. Lets zoom in on billionaires below $25 billion:
@@ -319,10 +321,12 @@ filtered_data <- subset(df_billionaires, finalWorth < 25000)
 
 # Create a scatter plot
 ggplot(filtered_data, aes(x = finalWorth, y = industries)) +
-  geom_point() +
-  labs(title = "Correlation Between GDP (finalWorth) and Industry for Billionaires Below $25,000",
-       x = "GDP (finalWorth)",
-       y = "Industry")
+    geom_point() +
+    labs(
+        title = "Correlation Between GDP (finalWorth) and Industry for Billionaires Below $25,000",
+        x = "GDP (finalWorth)",
+        y = "Industry"
+    )
 ```
 
 There is no obvious pattern or correlation.
@@ -344,17 +348,21 @@ cat("The most profitable industry is:", most_profitable_industry, "\n")
 
 ```{r}
 # Create a data frame for plotting
-plot_data <- data.frame(industry = names(average_wealth_by_industry),
-                        average_wealth = average_wealth_by_industry)
+plot_data <- data.frame(
+    industry = names(average_wealth_by_industry),
+    average_wealth = average_wealth_by_industry
+)
 
 # Sort the data frame by average wealth
 plot_data <- plot_data[order(plot_data$average_wealth, decreasing = TRUE), ]
 
 # Bar plot
-barplot(plot_data$average_wealth, names.arg = plot_data$industry, 
-        main = "Average Wealth by Industry",
-        xlab = "Industry", ylab = "Average Wealth",
-        col = "skyblue", cex.names = 0.8, las = 2)
+barplot(plot_data$average_wealth,
+    names.arg = plot_data$industry,
+    main = "Average Wealth by Industry",
+    xlab = "Industry", ylab = "Average Wealth",
+    col = "skyblue", cex.names = 0.8, las = 2
+)
 ```
 
 This bar chart shows that the industries don't really differ in being the most profitable. Also the results are inaccurate, due to vague classifications of their industries.
@@ -387,19 +395,203 @@ SAMPLE
 SAMPLE
 
 ## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
-### Is there a geographical pattern to the distribution of billionaires across countries? If so, what factors contribute to this distribution?
-Fabian
+### Is there a geographical pattern to the distribution of billionaires across countries?<br>If so, what factors contribute to this distribution?
+First of all we take a look at the wealth of the billionaires per country.\
+```{r}
+# Get finalworth per country
+df_temp <- na.omit(df_billionaires[c("country", "finalWorth")]) %>%
+    # Group by country
+    group_by(country) %>%
+    # Count billionaires per country
+    summarise(
+        count = n(),
+        total_finalWorth = (sum(finalWorth) / 1000)
+        # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
+    ) %>%
+    # Keep only countries with more than 4 billionaires
+    filter(count >= 5)
+
+# Plot as world map with plotly
+plot_ly(
+    type = "choropleth",
+    locations = df_temp$country,
+    locationmode = "country names",
+    z = df_temp$total_finalWorth,
+    text = df_temp$country,
+    colorscale = "Turbo",
+    colorbar = list(title = "Net Worth"),
+) %>%
+    layout(
+        title = "Total Net Worth of Billionaires per Country in Billion USD",
+        geo = list(
+            showframe = FALSE
+        )
+    )
+```
+The most wealth lies in usa and china. Chinese billionaires are mostly self-made. This may be, because China's economy just recently transformed from a largely agrarian and impoverished nation to the world's second-largest economy, driven by their market reforms and globalization. In the U.S. roughly 1/3 of the billionaires inherited their wealth.\
+\
+Let us now take a look at the number of billionaires per country.\
+```{r}
+# Filter for billionaires with country
+df_temp <- na.omit(df_billionaires["country"]) %>%
+    # Group by country
+    group_by(country) %>%
+    # Count billionaires per country
+    summarise(count = n()) %>%
+    # Sort by count
+    arrange(desc(count))
+
+# Plot as world map with plotly
+plot_ly(
+    type = "choropleth",
+    locations = df_temp$country,
+    locationmode = "country names",
+    z = df_temp$count,
+    text = df_temp$country,
+    colorscale = "Turbo",
+    colorbar = list(title = "Amount"),
+) %>%
+    layout(
+        title = "Number of Billionaires per Country",
+        geo = list(
+            showframe = FALSE
+        )
+    )
+```
+The five countries with the most billionaires are:\
+```{r}
+for (i in 1:5) {
+    cat(df_temp[i, ]$country, ":", df_temp[i, ]$count, "\n")
+}
+```
+What we can see is, that this plot is almost the same as the previous one.\
+The most billionaires are living in the USA,China and India.\
+This is not surprising, because these are the countries with the highest economic power.\
+\
+
+
+Let us now take a look at the number of billionaires per capita.\
+```{r}
+# Calculate billionaires per capita
+df_temp <- na.omit(df_billionaires[c("country", "population_country")]) %>%
+    # Group by country
+    group_by(country) %>%
+    # Count billionaires per country
+    summarise(
+        count = n(),
+        total_population = first(population_country)
+        # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
+    ) %>%
+    # Keep only countries with more than 4 billionaires
+    filter(count >= 5) %>%
+    # Calculate billionaires per capita
+    mutate(billionaires_per_capita = (count / total_population) * 100) %>%
+    # Sort by count
+    arrange(desc(billionaires_per_capita))
+
+# plot first 10 as bar chart
+ggplot(df_temp[1:10, ], aes(x = reorder(country, -billionaires_per_capita), y = billionaires_per_capita)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Billionaires per Capita",
+        x = "Country",
+        y = "Billionaires per Capita"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(df_temp[1:10, ])
+```
+But if you look at the number of billionaires per capita, you can see that the USA is not the country with the most billionaires per capita.\
+The country with the most billionaires per capita is Monaco with 17 billionaires, where only 39,000 people live.\
+The second country is Switzerland with 78 billionaires, where 8.5 million people live.\
+And the third Country is Singapore with 46 billionaires, where 5.7 million people live.\
+\
+
+As the next step we wanted to find out if there is a correlation between the number of billionaires and the GDP of a country.\
+
+```{r}
+# Filter for billionaires with country
+# df_temp <- na.omit(df_billionaires[c("country", "gdp_country")]) %>%
+#     # Group by country
+#     group_by(country) %>%
+#     # Count billionaires per country
+#     summarise(
+#         count = n(),
+#         gdp = first(gdp_country)
+#         # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
+#     ) %>%
+#     # Keep only countries with more than 4 billionaires
+#     filter(count >= 5) %>%
+#     # Calculate billionaires per capita
+#     mutate(billionaires_per_gdp = (count / gdp) * 100) %>%
+#     # Sort by count
+#     arrange(desc(billionaires_per_gdp))
+```
 
 ### In which countries do most billionaires inherit their wealth and why?
-Fabian
+First of all we wanted to check, if there is a mathematical correlation between the selfMade attribute and other attributes, which we can easily calculate.\
+```{r}
+# use df_billionaires and corellate selfMade with some columns
+columns <- c("gender", "category", "birthYear", "birthMonth", "age", "finalWorth", "country", "city", "state", "selfMade")
+
+df_temp <- na.omit(df_billionaires[columns])
+
+# convert columns to factor
+df_temp <- as.data.frame(lapply(df_temp, as.factor))
+
+# conver all to numeric
+df_temp <- as.data.frame(lapply(df_temp, as.numeric))
+
+# corellate selfMade attribute with everything
+self_made_corr <- cor(df_temp)
+
+# Print out the correlations of selfMade
+self_made_corr <- self_made_corr["selfMade", ]
+
+# Drop selfMade
+self_made_corr <- self_made_corr[-which(names(self_made_corr) == "selfMade")]
+
+# print temp as bar chart (temp is named vector)
+ggplot(data.frame(x = names(self_made_corr), y = self_made_corr), aes(x = reorder(x, -y), y = y)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "correlation of Self-Made with other Attributes",
+        x = "Attribute",
+        y = "correlation"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+# Filter for inherited billionaires
+df_temp.inherited <- na.omit(df_billionaires[c("country", "selfMade")]) %>%
+    filter(selfMade == FALSE) %>%
+    group_by(country) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count))
+
+
+df_temp.overall <- na.omit(df_billionaires[c("country", "selfMade")]) %>%
+    group_by(country) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count))
+
+# Print out country with most inherited billionaires
+cat(
+    "The country with the most inherited billionaires is", df_temp.inherited[1, ]$country, "with", df_temp.inherited[1, ]$count, "billionaires.\n",
+    "The country with the most billionaires overall is", df_temp.overall[1, ]$country, "with", df_temp.overall[1, ]$count, "billionaires."
+)
+```
+As We can see, the country with the most inherited billionaires is the same as the country with the most billionaires overall.\
+This is not surprising, because the more billionaires a country has, the more billionaires can inherit their wealth.\
 
 ## The relationship between age and becoming a billionaire.
-
 This plot gives on overview on the generated or inherited wealth by each billionaire indexed by their age. The x-axis demonstrates the age from 1 to 100+ and the y-axis demonstrates the wealth. Blue dots indicate a self-made wealth, while red dots indicate inherited wealth.
 
 ```{r}
 # Scatter plot: Wealth vs. Age
-ggplot(df, aes(x = age, y = finalWorth, color = selfMade)) +
+ggplot(df_billionaires, aes(x = age, y = finalWorth, color = selfMade)) +
     geom_point() +
     labs(
         title = "Wealth vs. Age",
@@ -412,10 +604,11 @@ ggplot(df, aes(x = age, y = finalWorth, color = selfMade)) +
 Let's also look at the youngest self-made billionaire:
 
 ```{r}
+df_temp <- df_billionaires
 # Remove NA values
-df <- na.omit(df)
+df_temp <- na.omit(df_temp)
 # Filter for self-made billionaires and find the minimum age
-youngest_age <- min(df[df$selfMade == TRUE, ]$age)
+youngest_age <- min(df_temp[df_temp$selfMade == TRUE, ]$age)
 # Print the result
 cat("The age of the youngest self-made billionaire is", youngest_age, "years.")
 ```
@@ -445,14 +638,14 @@ Let's also look at a bar chart showing the amount of billionaires for each age:
 ```{r}
 # Create a bar plot: Count of billionaires by age, differentiated by selfMade
 ggplot(filtered_data, aes(x = age, fill = factor(selfMade))) +
-  geom_bar(position = "dodge", color = "black") +
-  labs(
-    title = "Number of Billionaires by Age",
-    x = "Age",
-    y = "Number of Billionaires",
-    fill = "Self-Made"
-  ) +
-  theme_minimal()
+    geom_bar(position = "dodge", color = "black") +
+    labs(
+        title = "Number of Billionaires by Age",
+        x = "Age",
+        y = "Number of Billionaires",
+        fill = "Self-Made"
+    ) +
+    theme_minimal()
 ```
 
 Here you can see that self-made billionaires are generally younger than billionaires who inherited their wealth. You can also see a lot of self-made billionaires who are about 58 years old. This may indicate that being born about 60 years ago is a good time to get rich.
@@ -484,95 +677,150 @@ prop_table <- prop.table(summary_table, margin = 1)
 
 # Create a bar plot
 ggplot(df_billionaires, aes(x = age_group, fill = factor(selfMade))) +
-  geom_bar(position = "fill") +
-  labs(title = "Proportion of Self-Made Billionaires in Different Age Groups",
-       x = "Age Group",
-       y = "Proportion") +
-  scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "green"), name = "Self-Made")
+    geom_bar(position = "fill") +
+    labs(
+        title = "Proportion of Self-Made Billionaires in Different Age Groups",
+        x = "Age Group",
+        y = "Proportion"
+    ) +
+    scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "green"), name = "Self-Made")
 ```
 
 No, young billionaires are not more likely to be self-made. Between the age of 30 and 90, most billionaires are self-made.
 
 ## Countries with lower tax rates have more billionaires.
 ### Which countries have the lowest tax rates and how many billionaires do they have?
-Fabian
+First of all we wanted to find out which countries have the lowest tax rates.\
+```{r}
+# Which countries have the lowest tax rates and how many billionaires do they have?
+# Sort by total_tax_rate_country
+df_temp <- df_billionaires
+
+# Remove NA values
+df_temp <- na.omit(df_temp)
+
+# count billionaires per country keep the tax rate
+df_temp <- df_temp %>%
+    group_by(country, total_tax_rate_country) %>%
+    summarise(count = n())
+
+# Keep only countries with more than 4 billionaires
+df_temp <- df_temp[df_temp$count >= 5, ]
+
+# Sort by total_tax_rate_country
+df_temp <- df_temp[order(df_temp$total_tax_rate_country), ]
+
+# Print out the country, tax rate and number of billionaires
+cat("The country with the lowest tax rate is", df_temp[1, ]$country, "with a tax rate of", df_temp[1, ]$total_tax_rate_country, "and", df_temp[1, ]$count, "billionaires.")
+
+# print out all countries with their tax rate and number of billionaires
+print(df_temp, n = nrow(df_temp))
+```
 
 ## Countries with better educational attainment have more billionaires.
 ### Is there a correlation between educational attainment and the number of billionaires in a country?
-Fabian
-
-
-
-
-
-
-## Bar chart wealth by industry
-
-This bar chart shows the wealth distribution over all industries given in the dataset. It also differentiates between self-made wealth and inherited wealth.
-
+Let us first get an overview of the educational attainment of the billionaires.\
 ```{r}
-# Bar chart: Wealth by Industry
-ggplot(df, aes(x = reorder(category, -finalWorth), y = finalWorth, fill = selfMade)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(
-        title = "Wealth by Industry",
-        x = "Industry",
-        y = "Final Net Worth",
-        fill = "Self-Made"
-    )
-```
+# plot count of primary and tertiary side by side
+df_temp_primary <- df_billionaires[c("gross_primary_education_enrollment_country")] %>%
+    # Remove NA values
+    na.omit() %>%
+    # Group by country
+    group_by(gross_primary_education_enrollment_country) %>%
+    # Count billionaires per country
+    summarise(
+        count = n(),
+        primary_education = first(gross_primary_education_enrollment_country),
+    ) %>%
+    arrange(desc(primary_education))
 
-The billionaires working in Automotive are mainly self-made billionaires while the Fashion & Retail industry is dominated by billionaires that inherited their wealth. Modern industries like Telecom, Automotive, Technology and Media & Entertainment are domiated by self-made billionaires. Most of the wealth by these billionaires comes from the industries Automotive, Telecom, Fashion & Retail, Technology, Diversified, Media & Entertainment, Food & Beverages and Finance & Investments. We should also mention that this data is probably not 100% accurate due to the rough classification of the industry of each billionaire.
+df_temp_tertiary <- df_billionaires[c("gross_tertiary_education_enrollment")] %>%
+    # Remove NA values
+    na.omit() %>%
+    # Group by country
+    group_by(gross_tertiary_education_enrollment) %>%
+    # Count billionaires per country
+    summarise(
+        count = n(),
+        tertiary_education = first(gross_tertiary_education_enrollment),
+    ) %>%
+    arrange(desc(tertiary_education))
 
-## Geographical distribution of billionaires on a world map
-
-This does not work because we need a google api key... TODO: F\*ck Google die ehrenlosen Hunde
-
-```{r}
-# Map: Geographical distribution of billionaires
-```
-TODO: Here we need to describe the plot that is to generate!
-
-## Wealth distribution by gender
-
-This boxplot demonstrates the wealth distribution by biological gender.
-
-```{r}
-# Boxplot: Wealth by Gender
-ggplot(df, aes(x = gender, y = finalWorth, fill = gender)) +
-    geom_boxplot() +
-    labs(
-        title = "Wealth by Gender",
-        x = "Gender",
-        y = "Final Net Worth",
-        fill = "Gender"
-    )
-```
-Generally men are richer than women. TODO: ZOOM ON BOXPLOT AND FOCUS ON MAIN STATS INSTEAD OF RICHEST 25%! --> BOXPLOT LOOKS WEIRD
-
-## Billionaires wealth distribution by countries
-
-This plot shows the wealth of all billionaires belonging to the country they live in.
-
-```{r}
-# Stacked bar chart: Wealth by Country and Self-Made Status
-df_country <- df %>%
-    group_by(country, selfMade) %>%
-    summarise(totalWorth = sum(finalWorth))
-ggplot(df_country, aes(x = country, y = totalWorth, fill = selfMade)) +
+primary_plot <- ggplot(df_temp_primary[1:10, ], aes(x = reorder(primary_education, -count), y = count)) +
     geom_bar(stat = "identity") +
     labs(
-        title = "Wealth by Country and Self-Made Status",
-        x = "Country",
-        y = "Total Net Worth",
-        fill = "Self-Made"
+        title = "Count of billionaires per primary education",
+        x = "Primary Education",
+        y = "Count"
     ) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+tertiary_plot <- ggplot(df_temp_tertiary[1:10, ], aes(x = reorder(tertiary_education, -count), y = count)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Count of billionaires per tertiary education",
+        x = "Tertiary Education",
+        y = "Count"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+grid.arrange(primary_plot, tertiary_plot, ncol = 2)
 ```
 
-The most wealth lies in usa and china. Chinese billionaires are mostly self-made. This may be, because China's economy just recently transformed from a largely agrarian and impoverished nation to the world's second-largest economy, driven by their market reforms and globalization. In the U.S. roughly 1/3 of the billionaires inherited their wealth.
+Now lets calculate if there is a correlation between the amount of billionaires and the primary/tertiary education.\
+```{r}
+# calculate correlation between count of billionaires and primary/tertiary education
+correlation_primary <- cor(df_temp_primary)
+correlation_tertiary <- cor(df_temp_tertiary)
 
+# print correlation
+cat("Primary education correlation:", correlation_primary[1, 2])
+cat("Tertiary education correlation:", correlation_tertiary[1, 2])
+```
+
+
+
+
+To answer this question, we first had to find out which countries have the best educational attainment.\
+```{r}
+# Get the countries with the best educational attainment
+df_temp <- df_billionaires[c("gross_primary_education_enrollment_country", "gross_tertiary_education_enrollment", "country")] %>%
+    # Remove NA values
+    na.omit() %>%
+    # Group by country
+    group_by(country) %>%
+    # Count billionaires per country
+    summarise(
+        primary_education = first(gross_primary_education_enrollment_country),
+        tertiary_education = first(gross_tertiary_education_enrollment)
+        # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
+    ) %>%
+    arrange(desc(primary_education))
+df_temp_primary <- df_temp
+df_temp_tertiary <- arrange(df_temp, desc(tertiary_education))
+
+# compare the first 10 countries with the best primary education and the first 10 countries with the best tertiary education in a plot
+
+primary_plot <- ggplot(df_temp_primary[1:10, ], aes(x = reorder(country, -primary_education), y = primary_education)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Countries with the best primary education",
+        x = "Country",
+        y = "Primary Education"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+tertiary_plot <- ggplot(df_temp_tertiary[1:10, ], aes(x = reorder(country, -tertiary_education), y = tertiary_education)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Countries with the best tertiary education",
+        x = "Country",
+        y = "Tertiary Education"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+grid.arrange(primary_plot, tertiary_plot, ncol = 2)
+```
 
 # 5. Summary and conclusion
 Summarize your research question and your findings from your analysis here.  
