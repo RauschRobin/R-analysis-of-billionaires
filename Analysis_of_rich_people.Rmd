@@ -61,6 +61,7 @@ library(ggplot2) # to plot graphs and images
 library(dplyr)
 library(ggcorrplot)
 library(ggthemes)
+library(tidyverse)
 ```
 
 ## Read the CSV file into a dataframe called df_billionaires
@@ -219,6 +220,11 @@ Is the resulting data what you expected? Why or why not?
 
 ## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
 
+```{r}
+# Clean 'finalWorth' column and convert to numeric
+df_billionaires$finalWorth <- as.numeric(gsub("[^0-9.]", "", df_billionaires$finalWorth))
+```
+
 ## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
 
 ## The relationship between age and becoming a billionaire.
@@ -238,16 +244,147 @@ to support or illustrate your statements accordingly.
 You can also use suitable statistical methods or modeling here if they help you with your research question.
 
 ## The distribution of billionaire wealth is highly concentrated among a small number of individuals.
+
+We think that only a small amount of individuals own a huge part of the entire wealth of all billionaires. The same is already proven for the entire world population: "half of the world's net wealth belongs to the top 1%, top 10% of adults hold 85%, while the bottom 90% hold the remaining 15% of the world's total wealth, top 30% of adults hold 97% of the total wealth". 
+
+For that, we'll look at the wealth distribution between the billionaires in this dataset:
+
+```{r}
+ggplot(df_billionaires, aes(x = finalWorth)) +
+  geom_histogram(binwidth = 10000, fill = "blue", color = "black") +
+  labs(title = "Billionaire Wealth Distribution", x = "Final Worth", y = "Amount of billionaires") +
+  theme_minimal()
+```
+
+The plot shows, that the lower the finalWorth is, the higher the frequency gets. This means that most billionaires are barely above the threshold of 1 billion usd. Only a few billionaires have a higher finalWorth than 25000 million usd.
+
 ### How many billionaires own more than 80% of the total wealth?
 
-Robin
+Due to the global wealth being around $454.4 trillion in 2022. We cannot really calculate the amount of people that own 80% of the global wealth. But we can calculate the amount of billionaires that own more than 80% of the totalWealth of all billionaires:
+
+```{r}
+# Calculate the total wealth
+total_wealth <- sum(df_billionaires$finalWorth)
+
+cat("All billionaires wealth combined sums up to", total_wealth, "million usd.\n")
+
+# Calculate percentage of billionaires wealth compared to global wealth:
+result <- (total_wealth * 1e6) / (454.4 * 1e12)
+cat("The entire wealth of all billionaires is just", result * 100, "% of the global wealth.\n")
+
+# Sort billionaires by wealth in descending order
+sorted_billionaires <- df_billionaires[order(df_billionaires$finalWorth, decreasing = TRUE), ]
+
+# Calculate the cumulative sum of wealth
+sorted_billionaires$cumulative_wealth <- cumsum(sorted_billionaires$finalWorth)
+
+# Find the number of billionaires required to own more than 80% of total wealth
+num_billionaires_80_percent <- sum(sorted_billionaires$cumulative_wealth <= 0.8 * total_wealth)
+
+# Print the result
+cat("Number of billionaires owning more than 80% of total wealth of billionaires:", num_billionaires_80_percent, "\n")
+```
+
+The richest 1157 billionaires own 80% of the combined wealth of all billionaires. Assuming this dataset is complete, there are 2640 billionaires.
+
+Let's look at how many billionaires own half the entire wealth of all billionaires:
+
+```{r}
+# Find the number of billionaires required to own more than 80% of total wealth
+num_billionaires_80_percent <- sum(sorted_billionaires$cumulative_wealth <= 0.5 * total_wealth)
+
+# Print the result
+cat("Number of billionaires owning more than 50% of total wealth of billionaires:", num_billionaires_80_percent, "\n")
+```
+
+Only 302 of all 2640 billionaires own more than 50% of the total wealth. This proves that the tendency stays the same for the richest interval of wealth (billionaires) compared to the entire scope. 
 
 ## There is a strong correlation between the industries in which billionaires make their fortunes and the overall GDP of their countries.
+
+To check if there is a correlation, lets compare the industries with the gdp:
+
+```{r}
+ggplot(df_billionaires, aes(x = finalWorth, y = industries)) +
+  geom_point() +
+  labs(title = "Correlation Between GDP (finalWorth) and Industry",
+       x = "GDP (finalWorth)",
+       y = "Industry")
+```
+
+On this plot you cannot really see a pattern. Lets zoom in on billionaires below $25 billion:
+
+```{r}
+# Filter the dataset for billionaires with wealth below $25,000
+filtered_data <- subset(df_billionaires, finalWorth < 25000)
+
+# Create a scatter plot
+ggplot(filtered_data, aes(x = finalWorth, y = industries)) +
+  geom_point() +
+  labs(title = "Correlation Between GDP (finalWorth) and Industry for Billionaires Below $25,000",
+       x = "GDP (finalWorth)",
+       y = "Industry")
+```
+
+There is no obvious pattern or correlation.
+
 ### Which industry is the most profitable?
-Robin
+
+To calculate the most profitable industry, we can calculate the average wealth for each industry and compare them:
+
+```{r}
+# Calculate average wealth by industry
+average_wealth_by_industry <- tapply(df_billionaires$finalWorth, df_billionaires$industries, mean, na.rm = TRUE)
+
+# Identify the industry with the highest average wealth
+most_profitable_industry <- names(average_wealth_by_industry[which.max(average_wealth_by_industry)])
+
+# Print the result
+cat("The most profitable industry is:", most_profitable_industry, "\n")
+```
+
+```{r}
+# Create a data frame for plotting
+plot_data <- data.frame(industry = names(average_wealth_by_industry),
+                        average_wealth = average_wealth_by_industry)
+
+# Sort the data frame by average wealth
+plot_data <- plot_data[order(plot_data$average_wealth, decreasing = TRUE), ]
+
+# Bar plot
+barplot(plot_data$average_wealth, names.arg = plot_data$industry, 
+        main = "Average Wealth by Industry",
+        xlab = "Industry", ylab = "Average Wealth",
+        col = "skyblue", cex.names = 0.8, las = 2)
+```
+
+This bar chart shows that the industries don't really differ in being the most profitable. Also the results are inaccurate, due to vague classifications of their industries.
+
+The following bar chart shows the wealth distribution over all industries given in the data set. It also differentiates between self-made wealth and inherited wealth. I also removed the top billionaires above $25 billion.
+
+```{r}
+# Bar chart: Wealth by Industry
+ggplot(filtered_data, aes(x = reorder(category, -finalWorth), y = finalWorth, fill = selfMade)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+        title = "Wealth by Industry",
+        x = "Industry",
+        y = "Final Net Worth",
+        fill = "Self-Made"
+    )
+```
+
+Billionaires working in Energy, Telecom, Gambling & Casinos, Sports, Service and Construction & Engineering are mostly self-made. Industries like Finance & Investment and Media & Entertainment are dominated by billionaires that inherited their wealth. Overall the Technology and Manufacturing industry has a lot of billionaires below $25 billion. We should also mention that this data is probably not 100% accurate due to the rough classification of the industry of each billionaire.
 
 ### What is the relationship between the distribution of billionaire wealth and the economic strength of a country, measured by GDP, tax revenue and population?
-Robin
+
+SAMPLE
+
+```{r}
+
+```
+
+SAMPLE
 
 ## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
 ### Is there a geographical pattern to the distribution of billionaires across countries? If so, what factors contribute to this distribution?
@@ -257,18 +394,6 @@ Fabian
 Fabian
 
 ## The relationship between age and becoming a billionaire.
-### How many billionaires are self-made, and are younger billionaires more likely to be self-made?
-Robin
-
-## Countries with lower tax rates have more billionaires.
-### Which countries have the lowest tax rates and how many billionaires do they have?
-Fabian
-
-## Countries with better educational attainment have more billionaires.
-### Is there a correlation between educational attainment and the number of billionaires in a country?
-Fabian
-
-## Scatter plot between age and wealth
 
 This plot gives on overview on the generated or inherited wealth by each billionaire indexed by their age. The x-axis demonstrates the age from 1 to 100+ and the y-axis demonstrates the wealth. Blue dots indicate a self-made wealth, while red dots indicate inherited wealth.
 
@@ -284,6 +409,8 @@ ggplot(df, aes(x = age, y = finalWorth, color = selfMade)) +
     )
 ```
 
+Let's also look at the youngest self-made billionaire:
+
 ```{r}
 # Remove NA values
 df <- na.omit(df)
@@ -293,7 +420,91 @@ youngest_age <- min(df[df$selfMade == TRUE, ]$age)
 cat("The age of the youngest self-made billionaire is", youngest_age, "years.")
 ```
 
-The plot indicates that young billionaires before the age of 28 most definitely inherited their wealth. The youngest self-made billionaire is 28 years old. As the age increases, there is no more pattern. The only thing worth mentioning is that the richest billionaires are mostly self-made. This probably results out of the fact of inflation and the growing gap between rich and poor.
+This indicates that young billionaires below the age of 28 most definitely inherited their wealth. The youngest self-made billionaire is 28 years old. As the age increases, there is no obvious pattern. The only thing worth mentioning is that the richest billionaires are mostly self-made. This probably results out of the fact of inflation and the growing gap between rich and poor.
+Let's zoom in on billionaires with a wealth below $25 billion:
+
+```{r}
+# Filter out rows with missing values in finalWorth or age
+filtered_data <- subset(df_billionaires, !is.na(finalWorth) & !is.na(age) & finalWorth < 25000)
+
+# Scatter plot: Wealth vs. Age
+ggplot(filtered_data, aes(x = age, y = finalWorth, color = selfMade)) +
+    geom_point() +
+    labs(
+        title = "Wealth vs. Age",
+        x = "Age",
+        y = "Final Net Worth",
+        color = "Self-Made"
+    )
+```
+
+This also shows no obvious pattern. 
+
+Let's also look at a bar chart showing the amount of billionaires for each age:
+
+```{r}
+# Create a bar plot: Count of billionaires by age, differentiated by selfMade
+ggplot(filtered_data, aes(x = age, fill = factor(selfMade))) +
+  geom_bar(position = "dodge", color = "black") +
+  labs(
+    title = "Number of Billionaires by Age",
+    x = "Age",
+    y = "Number of Billionaires",
+    fill = "Self-Made"
+  ) +
+  theme_minimal()
+```
+
+Here you can see that self-made billionaires are generally younger than billionaires who inherited their wealth. You can also see a lot of self-made billionaires who are about 58 years old. This may indicate that being born about 60 years ago is a good time to get rich.
+
+### How many billionaires are self-made, and are younger billionaires more likely to be self-made?
+
+First let's look at how many billionaires are self-made:
+
+```{r}
+# Count the number of self-made billionaires
+self_made_count <- sum(df_billionaires$selfMade == TRUE)
+
+# Print the count
+cat("Number of self-made billionaires: ", self_made_count, "/2640\n")
+```
+
+Out of the 2,640 billionaires worldwide, 1,812 are considered self-made, meaning they accumulated their wealth through entrepreneurship and business endeavors rather than inheriting it. This trend can be attributed to the increasing opportunities for innovation and entrepreneurship in the global economy, fostering a conducive environment for individuals to create and grow their own businesses. Factors such as technological advancements, globalization, and access to capital have empowered individuals to pursue entrepreneurial ventures, leading to a significant number of self-made billionaires. Additionally, the rise of industries like technology has provided platforms for innovative minds to disrupt traditional business models and amass substantial fortunes.
+Are younger billionaires more likely to be self-made?
+
+```{r}
+# Create age groups (you can adjust the breaks and labels accordingly)
+age_breaks <- c(0, 20, 30, 40, 50, 60, 70, 80, 90, Inf)
+age_labels <- c("<20", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", "90+")
+df_billionaires$age_group <- cut(df_billionaires$age, breaks = age_breaks, labels = age_labels, right = FALSE)
+
+# Create a summary table of the proportion of self-made billionaires in each age group
+summary_table <- table(df_billionaires$age_group, df_billionaires$selfMade)
+prop_table <- prop.table(summary_table, margin = 1)
+
+# Create a bar plot
+ggplot(df_billionaires, aes(x = age_group, fill = factor(selfMade))) +
+  geom_bar(position = "fill") +
+  labs(title = "Proportion of Self-Made Billionaires in Different Age Groups",
+       x = "Age Group",
+       y = "Proportion") +
+  scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "green"), name = "Self-Made")
+```
+
+No, young billionaires are not more likely to be self-made. Between the age of 30 and 90, most billionaires are self-made.
+
+## Countries with lower tax rates have more billionaires.
+### Which countries have the lowest tax rates and how many billionaires do they have?
+Fabian
+
+## Countries with better educational attainment have more billionaires.
+### Is there a correlation between educational attainment and the number of billionaires in a country?
+Fabian
+
+
+
+
+
 
 ## Bar chart wealth by industry
 
