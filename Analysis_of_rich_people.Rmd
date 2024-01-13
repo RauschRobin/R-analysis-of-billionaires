@@ -801,7 +801,7 @@ df_temp_tertiary <- arrange(df_temp, desc(tertiary_education))
 
 # compare the first 10 countries with the best primary education and the first 10 countries with the best tertiary education in a plot
 
-primary_plot <- ggplot(df_temp.primary[1:10, ], aes(x = reorder(country, -primary_education), y = primary_education)) +
+primary_plot <- ggplot(df_temp_primary[1:10, ], aes(x = reorder(country, -primary_education), y = primary_education)) +
     geom_bar(stat = "identity") +
     labs(
         title = "Countries with the best primary education",
@@ -810,7 +810,7 @@ primary_plot <- ggplot(df_temp.primary[1:10, ], aes(x = reorder(country, -primar
     ) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-tertiary_plot <- ggplot(df_temp.tertiary[1:10, ], aes(x = reorder(country, -tertiary_education), y = tertiary_education)) +
+tertiary_plot <- ggplot(df_temp_tertiary[1:10, ], aes(x = reorder(country, -tertiary_education), y = tertiary_education)) +
     geom_bar(stat = "identity") +
     labs(
         title = "Countries with the best tertiary education",
