@@ -387,13 +387,51 @@ Billionaires working in Energy, Telecom, Gambling & Casinos, Sports, Service and
 
 ### What is the relationship between the distribution of billionaire wealth and the economic strength of a country, measured by GDP, tax revenue and population?
 
-SAMPLE
+First, let's look at the relationship between the GDP and the billionaires wealth:
 
 ```{r}
+# Convert columns with monetary values to numeric
+data <- df_billionaires
+data$finalWorth <- as.numeric(gsub("[^0-9.]", "", data$finalWorth))
+data$gdp_country <- as.numeric(gsub("[^0-9.]", "", data$gdp_country))
+data$tax_revenue_country_country <- as.numeric(gsub("[^0-9.]", "", data$tax_revenue_country_country))
+data$population_country <- as.numeric(gsub("[^0-9.]", "", data$population_country))
 
+# Filter out rows with missing values in relevant columns
+data <- data %>% filter(!is.na(finalWorth) & !is.na(gdp_country))
+
+# Create scatter plots
+ggplot(data, aes(x = gdp_country, y = finalWorth)) +
+  geom_point() +
+  labs(title = "Relationship between GDP and Billionaire Wealth",
+       x = "GDP (in trillions USD)",
+       y = "Billionaire Wealth (in billions USD)")
 ```
 
-SAMPLE
+There is no obvious correlation or trend.
+Now let's look at the relationship between tax revenue and billionaires wealth:
+
+```{r}
+ggplot(data, aes(x = tax_revenue_country_country, y = finalWorth)) +
+  geom_point() +
+  labs(title = "Relationship between Tax Revenue and Billionaire Wealth",
+       x = "Tax Revenue (in billions USD)",
+       y = "Billionaire Wealth (in billions USD)")
+```
+
+This plot shows that there is no obvious correlation or trend between a countries tax revenue and the billionaires wealth.
+Last but not least, let's look at the relationship between a countires population and the billionaires wealth:
+
+```{r}
+ggplot(data, aes(x = population_country, y = finalWorth)) +
+  geom_point() +
+  labs(title = "Relationship between Population and Billionaire Wealth",
+       x = "Population",
+       y = "Billionaire Wealth (in billions USD)")
+```
+
+Again, the plot shows no obvious correlation or trend.
+All these plots are biased by the amount of billionaires of each country. You can always identify the usa, france and china. The differences between those countries amost always are responsible for the fact that you cannot identify a correlation or trend.
 
 ## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
 ### Is there a geographical pattern to the distribution of billionaires across countries?<br>If so, what factors contribute to this distribution?
