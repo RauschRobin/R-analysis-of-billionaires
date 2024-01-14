@@ -10,6 +10,7 @@ output: html_document
 
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(out.width = "100%")
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 This is the R project of Fabian and Robin. We decided to analyse data from billionaires.  
@@ -396,41 +397,7 @@ SAMPLE
 
 ## The geographic distribution of billionaires across countries reflects the global economic landscape and the opportunities for wealth creation in different regions.
 ### Is there a geographical pattern to the distribution of billionaires across countries?<br>If so, what factors contribute to this distribution?
-First of all we take a look at the wealth of the billionaires per country.\
-```{r}
-# Get finalworth per country
-df_temp <- na.omit(df_billionaires[c("country", "finalWorth")]) %>%
-    # Group by country
-    group_by(country) %>%
-    # Count billionaires per country
-    summarise(
-        count = n(),
-        total_finalWorth = (sum(finalWorth) / 1000)
-        # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
-    ) %>%
-    # Keep only countries with more than 4 billionaires
-    filter(count >= 5)
-
-# Plot as world map with plotly
-plot_ly(
-    type = "choropleth",
-    locations = df_temp$country,
-    locationmode = "country names",
-    z = df_temp$total_finalWorth,
-    text = df_temp$country,
-    colorscale = "Turbo",
-    colorbar = list(title = "Net Worth"),
-) %>%
-    layout(
-        title = "Total Net Worth of Billionaires per Country in Billion USD",
-        geo = list(
-            showframe = FALSE
-        )
-    )
-```
-The most wealth lies in usa and china. Chinese billionaires are mostly self-made. This may be, because China's economy just recently transformed from a largely agrarian and impoverished nation to the world's second-largest economy, driven by their market reforms and globalization. In the U.S. roughly 1/3 of the billionaires inherited their wealth.\
-\
-Let us now take a look at the number of billionaires per country.\
+Let's first examine the number of billionaires per country.
 ```{r}
 # Filter for billionaires with country
 df_temp <- na.omit(df_billionaires["country"]) %>%
@@ -458,78 +425,143 @@ plot_ly(
         )
     )
 ```
-The five countries with the most billionaires are:\
+The five countries with the most billionaires are:
 ```{r}
 for (i in 1:5) {
     cat(df_temp[i, ]$country, ":", df_temp[i, ]$count, "\n")
 }
 ```
-What we can see is, that this plot is almost the same as the previous one.\
-The most billionaires are living in the USA,China and India.\
-This is not surprising, because these are the countries with the highest economic power.\
-\
+What we can observe is that the highest number of billionaires resides in the USA, China, and India.\
+This is unsurprising, given that these countries possess the highest economic power.\
 
-
-Let us now take a look at the number of billionaires per capita.\
+Now, let's turn our attention to the total wealth of billionaires per country.
 ```{r}
-# Calculate billionaires per capita
-df_temp <- na.omit(df_billionaires[c("country", "population_country")]) %>%
+# Get finalworth per country
+df_temp <- na.omit(df_billionaires[c("country", "finalWorth")]) %>%
     # Group by country
     group_by(country) %>%
     # Count billionaires per country
     summarise(
         count = n(),
-        total_population = first(population_country)
+        total_finalWorth = (sum(finalWorth) / 1000)
         # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
     ) %>%
     # Keep only countries with more than 4 billionaires
-    filter(count >= 5) %>%
-    # Calculate billionaires per capita
-    mutate(billionaires_per_capita = (count / total_population) * 100) %>%
-    # Sort by count
-    arrange(desc(billionaires_per_capita))
+    filter(count >= 5)
+# Plot as world map with plotly
+plot_ly(
+    type = "choropleth",
+    locations = df_temp$country,
+    locationmode = "country names",
+    z = df_temp$total_finalWorth,
+    text = df_temp$country,
+    colorscale = "Turbo",
+    colorbar = list(title = "Net Worth"),
+) %>%
+    layout(
+        title = "Summed up wealth of billionaires per country in billion USD",
+        geo = list(
+            showframe = FALSE
+        )
+    )
+```
+This graph appears almost identical to the previous one. The most noteworthy observation is that the greatest wealth is concentrated in the USA and China. This might be attributed to the fact that the USA boasts the highest number of billionaires at 754, and China's economy has recently transformed from a predominantly agrarian and impoverished nation to the world's second-largest economy, fueled by market reforms and globalization.\
 
-# plot first 10 as bar chart
-ggplot(df_temp[1:10, ], aes(x = reorder(country, -billionaires_per_capita), y = billionaires_per_capita)) +
+Next, we can gain an overview of the industries in which billionaires are involved per country. Perhaps we can identify a pattern where the industry is closely tied to the country.
+```{r}
+df_us <- na.omit(df_billionaires[c("country", "industries")]) %>%
+    filter(country == "United States") %>%
+    group_by(industries) %>%
+    summarise(
+        count = n()
+    ) %>%
+    arrange(desc(count))
+
+df_china <- na.omit(df_billionaires[c("country", "industries")]) %>%
+    filter(country == "China") %>%
+    group_by(industries) %>%
+    summarise(
+        count = n()
+    ) %>%
+    arrange(desc(count))
+
+df_india <- na.omit(df_billionaires[c("country", "industries")]) %>%
+    filter(country == "India") %>%
+    group_by(industries) %>%
+    summarise(
+        count = n()
+    ) %>%
+    arrange(desc(count))
+```
+Let's begin by examining the industries in the USA.
+```{r}
+ggplot(df_us[1:10, ], aes(x = reorder(industries, -count), y = count)) +
     geom_bar(stat = "identity") +
     labs(
-        title = "Billionaires per Capita",
-        x = "Country",
-        y = "Billionaires per Capita"
+        title = "US industries",
+        x = "Industry",
+        y = "Amount"
     ) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-print(df_temp[1:10, ])
 ```
-But if you look at the number of billionaires per capita, you can see that the USA is not the country with the most billionaires per capita.\
-The country with the most billionaires per capita is Monaco with 17 billionaires, where only 39,000 people live.\
-The second country is Switzerland with 78 billionaires, where 8.5 million people live.\
-And the third Country is Singapore with 46 billionaires, where 5.7 million people live.\
-\
-
-As the next step we wanted to find out if there is a correlation between the number of billionaires and the GDP of a country.\
-
+The majority of billionaires in the US are in the finance and investment industry, followed by the technology and food & beverage industry.
 ```{r}
-# Filter for billionaires with country
-# df_temp <- na.omit(df_billionaires[c("country", "gdp_country")]) %>%
-#     # Group by country
-#     group_by(country) %>%
-#     # Count billionaires per country
-#     summarise(
-#         count = n(),
-#         gdp = first(gdp_country)
-#         # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
-#     ) %>%
-#     # Keep only countries with more than 4 billionaires
-#     filter(count >= 5) %>%
-#     # Calculate billionaires per capita
-#     mutate(billionaires_per_gdp = (count / gdp) * 100) %>%
-#     # Sort by count
-#     arrange(desc(billionaires_per_gdp))
+ggplot(df_china[1:10, ], aes(x = reorder(industries, -count), y = count)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Chinese industries",
+        x = "Industry",
+        y = "Amount"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+In China, the most billionaires are in the manufacturing industry, followed by the technology and healthcare industry.
+```{r}
+ggplot(df_india[1:10, ], aes(x = reorder(industries, -count), y = count)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Indian industries",
+        x = "Industry",
+        y = "Amount"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Like in China, the majority of billionaires in India are in the manufacturing industry. The second-largest group of billionaires in India is in the healthcare sector.\
+
+If we delve into the manufacturing industry in both China and India, we discover that China holds the title of the world's largest manufacturing economy and exporter of goods, as mentioned earlier. India's manufacturing industry has been experiencing rapid growth in recent years. This growth can be attributed to the comparatively low labor costs in both India and China.\
+
+However, previous analyses of GDP and industrial sectors have shown that there is no correlation between the sector/GDP and being a billionaire.\
+
+The only potentially existing geographical connection is that approximately 18% of the world's population resides in both China and India. This is the only pattern that could explain the distribution of billionaires across these countries, suggesting that where more people live, there is also a greater potential for individuals to become billionaires.\
 
 ### In which countries do most billionaires inherit their wealth and why?
-First of all we wanted to check, if there is a mathematical correlation between the selfMade attribute and other attributes, which we can easily calculate.\
+```{r}
+df_temp <- filter(df_billionaires[c("country", "selfMade")], country != "") %>%
+    na.omit() %>%
+    group_by(country, selfMade) %>%
+    summarise(count = n()) %>%
+    arrange(selfMade, desc(count))
+
+# delete all entries which are not in the list of top 10 inherited countries
+df_temp <- df_temp[df_temp$country %in% df_temp[1:10, ]$country, ] %>%
+    arrange(country, desc(count))
+
+# Plot a bar chart of the top 10 countries with the most inherited billionaires.
+# Also showing the total amount of billionaires per country. (2 bars in one chart)
+ggplot(df_temp, aes(x = country, y = count, fill = factor(selfMade))) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_text(aes(label = count), position = position_dodge(width = 0.9), vjust = -0.5) +
+    labs(
+        title = "Billionaires Count by Country and SelfMade Status",
+        x = "Country",
+        y = "Count",
+        fill = "SelfMade"
+    ) +
+    theme_minimal()
+```
+The country with the most billionaires also tops the list for inherited billionaires, reflecting a correlation between a higher billionaire count and inheritance opportunities. China, ranking second in billionaires globally, exhibits the lowest number of inherited billionaires on the graph, indicating a distinctive wealth distribution pattern. This could be due to fast economic changes and the socialist influences discouraging wealth inheritance.
+
+To check further why billionaires inherit their wealth, we examine if there is a mathematical correlation between the 'self-made' attribute and other attributes.
 ```{r}
 # use df_billionaires and corellate selfMade with some columns
 columns <- c("gender", "category", "birthYear", "birthMonth", "age", "finalWorth", "country", "city", "state", "selfMade")
@@ -560,31 +592,11 @@ ggplot(data.frame(x = names(self_made_corr), y = self_made_corr), aes(x = reorde
         y = "correlation"
     ) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(self_made_corr)
 ```
+The highest existing correlation is between gender and the self-made status, with a value of 0.32. However, this is likely because it was historically more challenging for women to establish businesses and accumulate wealth.\
 
-
-```{r}
-# Filter for inherited billionaires
-df_temp.inherited <- na.omit(df_billionaires[c("country", "selfMade")]) %>%
-    filter(selfMade == FALSE) %>%
-    group_by(country) %>%
-    summarise(count = n()) %>%
-    arrange(desc(count))
-
-
-df_temp.overall <- na.omit(df_billionaires[c("country", "selfMade")]) %>%
-    group_by(country) %>%
-    summarise(count = n()) %>%
-    arrange(desc(count))
-
-# Print out country with most inherited billionaires
-cat(
-    "The country with the most inherited billionaires is", df_temp.inherited[1, ]$country, "with", df_temp.inherited[1, ]$count, "billionaires.\n",
-    "The country with the most billionaires overall is", df_temp.overall[1, ]$country, "with", df_temp.overall[1, ]$count, "billionaires."
-)
-```
-As We can see, the country with the most inherited billionaires is the same as the country with the most billionaires overall.\
-This is not surprising, because the more billionaires a country has, the more billionaires can inherit their wealth.\
+The second-highest value is the linear correlation between income category and the self-made status, with a value of 0.19. Both of these mentioned values, however, are too low to truly confirm a correlation between the attributes. This holds true for the other attributes in the graph as well.
 
 ## The relationship between age and becoming a billionaire.
 This plot gives on overview on the generated or inherited wealth by each billionaire indexed by their age. The x-axis demonstrates the age from 1 to 100+ and the y-axis demonstrates the wealth. Blue dots indicate a self-made wealth, while red dots indicate inherited wealth.
@@ -691,100 +703,81 @@ No, young billionaires are not more likely to be self-made. Between the age of 3
 ## Countries with lower tax rates have more billionaires.
 ### Which countries have the lowest tax rates and how many billionaires do they have?
 First of all we wanted to find out which countries have the lowest tax rates.\
+We also take a look at the countries with the highest tax rates to compare these with each other.
 ```{r}
-# Which countries have the lowest tax rates and how many billionaires do they have?
-# Sort by total_tax_rate_country
-df_temp <- df_billionaires
+# Get the countries with the lowest tax rates
+lowest_tax <- df_billionaires[c("total_tax_rate_country", "country")] %>%
+    # Remove NA values
+    na.omit() %>%
+    # Group by country
+    group_by(country) %>%
+    # Count billionaires per country
+    summarise(
+        total_tax_rate_country = first(total_tax_rate_country),
+        count = n()
+    ) %>%
+    # Filter Argentina, because tax rate of 106,3% is not realistic.
+    filter(country != "Argentina") %>%
+    # Sort by total_tax_rate_country
+    arrange(total_tax_rate_country)
 
-# Remove NA values
-df_temp <- na.omit(df_temp)
+# plot barchart for the top 10 countries with the lowest tax rate
+plot1 <- ggplot(lowest_tax[1:15, ], aes(x = reorder(country, total_tax_rate_country), y = total_tax_rate_country)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Top 10 countries with the lowest tax rate",
+        x = "Country",
+        y = "Tax Rate"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# count billionaires per country keep the tax rate
-df_temp <- df_temp %>%
-    group_by(country, total_tax_rate_country) %>%
-    summarise(count = n())
+# plot the amount of billionaires for the top 10 countries with the lowest tax rate
+plot2 <- ggplot(lowest_tax[1:15, ], aes(x = reorder(country, total_tax_rate_country), y = count)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Top 10 countries with the lowest tax rate",
+        x = "Country",
+        y = "Count"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Keep only countries with more than 4 billionaires
-df_temp <- df_temp[df_temp$count >= 5, ]
+highest_tax <- arrange(lowest_tax, desc(total_tax_rate_country))
 
-# Sort by total_tax_rate_country
-df_temp <- df_temp[order(df_temp$total_tax_rate_country), ]
+# plot barchart for the top 10 countries with the highest tax rate
+plot3 <- ggplot(highest_tax[1:15, ], aes(x = reorder(country, -total_tax_rate_country), y = total_tax_rate_country)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Top 10 countries with the highest tax rate",
+        x = "Country",
+        y = "Tax Rate"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Print out the country, tax rate and number of billionaires
-cat("The country with the lowest tax rate is", df_temp[1, ]$country, "with a tax rate of", df_temp[1, ]$total_tax_rate_country, "and", df_temp[1, ]$count, "billionaires.")
+# plot the amount of billionaires for the top 10 countries with the highest tax rate
+plot4 <- ggplot(highest_tax[1:15, ], aes(x = reorder(country, -total_tax_rate_country), y = count)) +
+    geom_bar(stat = "identity") +
+    labs(
+        title = "Top 10 countries with the highest tax rate",
+        x = "Country",
+        y = "Count"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# print out all countries with their tax rate and number of billionaires
-print(df_temp, n = nrow(df_temp))
+grid.arrange(plot1, plot2, plot3, plot4, ncol = 2)
 ```
+Georgia has the lowest tax rate at 9.9%. There is only one billionaire in Georgia. The first graph depicts a total of 155 billionaires.
+The country with the highest tax rate is Colombia, with a rate of 71.2%. Colombia also has only one billionaire. The second graph shows a total of 1019 billionaires.\
+
+When comparing these plots, we can observe that more billionaires live in countries with higher tax rates.
+In this plot, it is notably influenced by China; however, even when excluding China from consideration, the graph with higher tax rates still accumulates more billionaires than the one with lower tax rates.\
+
+This observation, though, is not representative enough to make a statement about whether countries with higher tax rates have more billionaires. Further studies would be needed to draw a conclusive conclusion.
 
 ## Countries with better educational attainment have more billionaires.
-### Is there a correlation between educational attainment and the number of billionaires in a country?
-Let us first get an overview of the educational attainment of the billionaires.\
-```{r}
-# plot count of primary and tertiary side by side
-df_temp_primary <- df_billionaires[c("gross_primary_education_enrollment_country")] %>%
-    # Remove NA values
-    na.omit() %>%
-    # Group by country
-    group_by(gross_primary_education_enrollment_country) %>%
-    # Count billionaires per country
-    summarise(
-        count = n(),
-        primary_education = first(gross_primary_education_enrollment_country),
-    ) %>%
-    arrange(desc(primary_education))
-
-df_temp_tertiary <- df_billionaires[c("gross_tertiary_education_enrollment")] %>%
-    # Remove NA values
-    na.omit() %>%
-    # Group by country
-    group_by(gross_tertiary_education_enrollment) %>%
-    # Count billionaires per country
-    summarise(
-        count = n(),
-        tertiary_education = first(gross_tertiary_education_enrollment),
-    ) %>%
-    arrange(desc(tertiary_education))
-
-primary_plot <- ggplot(df_temp_primary[1:10, ], aes(x = reorder(primary_education, -count), y = count)) +
-    geom_bar(stat = "identity") +
-    labs(
-        title = "Count of billionaires per primary education",
-        x = "Primary Education",
-        y = "Count"
-    ) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-tertiary_plot <- ggplot(df_temp_tertiary[1:10, ], aes(x = reorder(tertiary_education, -count), y = count)) +
-    geom_bar(stat = "identity") +
-    labs(
-        title = "Count of billionaires per tertiary education",
-        x = "Tertiary Education",
-        y = "Count"
-    ) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-grid.arrange(primary_plot, tertiary_plot, ncol = 2)
-```
-
-Now lets calculate if there is a correlation between the amount of billionaires and the primary/tertiary education.\
-```{r}
-# calculate correlation between count of billionaires and primary/tertiary education
-correlation_primary <- cor(df_temp_primary)
-correlation_tertiary <- cor(df_temp_tertiary)
-
-# print correlation
-cat("Primary education correlation:", correlation_primary[1, 2])
-cat("Tertiary education correlation:", correlation_tertiary[1, 2])
-```
-
-
-
-
-To answer this question, we first had to find out which countries have the best educational attainment.\
+Let us first get an overview of the amount of billionaires .\
 ```{r}
 # Get the countries with the best educational attainment
-df_temp <- df_billionaires[c("gross_primary_education_enrollment_country", "gross_tertiary_education_enrollment", "country")] %>%
+df_education <- df_billionaires[c("gross_primary_education_enrollment_country", "gross_tertiary_education_enrollment", "country")] %>%
     # Remove NA values
     na.omit() %>%
     # Group by country
@@ -792,35 +785,77 @@ df_temp <- df_billionaires[c("gross_primary_education_enrollment_country", "gros
     # Count billionaires per country
     summarise(
         primary_education = first(gross_primary_education_enrollment_country),
-        tertiary_education = first(gross_tertiary_education_enrollment)
+        tertiary_education = first(gross_tertiary_education_enrollment),
+        count = n()
         # Hier können Sie weitere Aggregationsfunktionen hinzufügen, falls benötigt
     ) %>%
     arrange(desc(primary_education))
-df_temp_primary <- df_temp
-df_temp_tertiary <- arrange(df_temp, desc(tertiary_education))
 
-# compare the first 10 countries with the best primary education and the first 10 countries with the best tertiary education in a plot
-
-primary_plot <- ggplot(df_temp_primary[1:10, ], aes(x = reorder(country, -primary_education), y = primary_education)) +
-    geom_bar(stat = "identity") +
-    labs(
-        title = "Countries with the best primary education",
-        x = "Country",
-        y = "Primary Education"
-    ) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-tertiary_plot <- ggplot(df_temp_tertiary[1:10, ], aes(x = reorder(country, -tertiary_education), y = tertiary_education)) +
-    geom_bar(stat = "identity") +
-    labs(
-        title = "Countries with the best tertiary education",
-        x = "Country",
-        y = "Tertiary Education"
-    ) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-grid.arrange(primary_plot, tertiary_plot, ncol = 2)
+df_temp_primary <- df_education
+df_temp_tertiary <- arrange(df_education, desc(tertiary_education))
 ```
+```{r}
+# print the amount of billionaires of the first five countries with the best primary education
+{
+    cat("Amount of billionaires in the first five countries with the best primary education:\n")
+    for (i in 1:5) {
+        cat(df_temp_primary[i, ]$country, ":", df_temp_primary[i, ]$count, "\n")
+    }
+}
+# print the amount of billionaires of the first five countries with the best tertiary education
+{
+    cat("Amount of billionaires in the first five countries with the best tertiary education:\n")
+    for (i in 1:5) {
+        cat(df_temp_tertiary[i, ]$country, ":", df_temp_tertiary[i, ]$count, "\n")
+    }
+}
+```
+Lets do the same for the countries with the lowest educational attainment:
+```{r}
+{
+    lowest_primary <- arrange(df_temp_primary, primary_education)
+    cat("Amount of billionaires in the first five countries with the lowest primary educational enrollment:\n")
+    for (i in 1:5) {
+        cat(lowest_primary[i, ]$country, ":", lowest_primary[i, ]$count, "\n")
+    }
+}
+# print the amount of billionaires of the first five countries with the best tertiary education
+{
+    lowest_tertiary <- arrange(df_temp_tertiary, tertiary_education)
+    cat("Amount of billionaires in the first five countries with the lowest tertiary educational enrollment:\n")
+    for (i in 1:5) {
+        cat(lowest_tertiary[i, ]$country, ":", lowest_tertiary[i, ]$count, "\n")
+    }
+}
+```
+If we compare those we can clearly see, that there are more billionaires in countries with better educational attainment.\
+This could be an indicator that the educational attainment is a factor for becoming a billionaire.\ 
+
+### Is there a correlation between educational attainment and the number of billionaires in a country?
+
+Now lets calculate if there is a correlation between the amount of billionaires and the primary/tertiary education.\
+```{r}
+education_corr_df <- df_education
+# convert columns to factor
+education_corr_df <- as.data.frame(lapply(education_corr_df, as.factor))
+
+# conver all to numeric
+education_corr_df <- as.data.frame(lapply(education_corr_df, as.numeric))
+
+# calculate correlation between count of billionaires and primary/tertiary education
+education_corr <- cor(education_corr_df)
+
+# print correlation for primary and secondary education
+{
+    cat("Correlation: billionaires - primary education:", education_corr["count", "primary_education"], "\n")
+    cat("Correlation: billionaires - tertiary education:", education_corr["count", "tertiary_education"], "\n")
+}
+```
+The correlation between the number of billionaires and primary education is 0.035 (3.5%). The correlation for tertiary education is 0.249 (24.9%).\
+
+From this, we can deduce that there is no connection between primary education and the number of billionaires.\
+However, tertiary education shows a slight linear relationship with the number of billionaires.\
+This could make sense since tertiary education represents the highest level of education.
 
 # 5. Summary and conclusion
 Summarize your research question and your findings from your analysis here.  
